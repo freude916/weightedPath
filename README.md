@@ -12,9 +12,16 @@ It then looks at every map node in every possible path, and saves the maximum va
 
 This information is displayed on the map, allowing you to see which nodes will result in a path that has a high potential value.
 
-# Store value (TODO)
+# Store value (Partial TODO)
 
 When determining the value of a store, the mod keeps track of each path's estimated gold at each step along the path. This factors in all of the gold related relics as well.
 
 For example, if you have a membership card, any path that passes through a store will be valued as though your expected gold when reaching the store is doubled.
 Another example would be if you have the Ssserpent Head relic, all ? nodes you encounter on a path that contains a store will make that store's value higher because of the extra gold gained from the ? nodes.
+
+- Currently, I didn't examine the gold monsters drop detailedly, just vibe coding tells:
+- - Monster +10~20 Gold, pick 15
+- - Elite +35~45 Gold, pick 40
+- - Treasure +42~53 Gold, pick 48
+
+- Currently, I didn't examine all relics which affects gold drop.

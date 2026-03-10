@@ -27,12 +27,18 @@ public partial class WeightedPaths : Node
     public static Dictionary<MapCoord, double> PointValues { get; } = new();
 
     /// <summary>
+    /// Maximum value for each row (for row-based color normalization).
+    /// Key = row number, Value = max value in that row.
+    /// </summary>
+    public static Dictionary<int, double> RowMaxValues { get; } = new();
+
+    /// <summary>
     /// All possible paths from current position.
     /// </summary>
     public static List<MapPath> AllPaths { get; private set; } = new();
 
     /// <summary>
-    /// Minimum and maximum values for color normalization.
+    /// Minimum and maximum values for global color normalization.
     /// </summary>
     public static double MinValue { get; private set; }
     public static double MaxValue { get; private set; }
@@ -98,7 +104,8 @@ public partial class WeightedPaths : Node
                 }
             }
 
-            // Calculate min/max for color normalization
+            // Calculate min/max for color normalization and row max values
+            RowMaxValues.Clear();
             if (PointValues.Count > 0)
             {
                 MinValue = double.MaxValue;
@@ -106,8 +113,17 @@ public partial class WeightedPaths : Node
 
                 foreach (var kvp in PointValues)
                 {
-                    if (kvp.Value < MinValue) MinValue = kvp.Value;
-                    if (kvp.Value > MaxValue) MaxValue = kvp.Value;
+                    var value = kvp.Value;
+                    var row = kvp.Key.row;
+
+                    if (value < MinValue) MinValue = value;
+                    if (value > MaxValue) MaxValue = value;
+
+                    // Track max value per row
+                    if (!RowMaxValues.TryGetValue(row, out var currentMax) || value > currentMax)
+                    {
+                        RowMaxValues[row] = value;
+                    }
                 }
 
                 // Ensure we have a range
@@ -144,6 +160,7 @@ public partial class WeightedPaths : Node
 
     /// <summary>
     /// Gets a color for displaying the value (red to green gradient).
+    /// Uses global min/max normalization.
     /// </summary>
     public static Color GetValueColor(double value)
     {
@@ -161,6 +178,32 @@ public partial class WeightedPaths : Node
         {
             // Yellow to Green
             return new Color((float)(2 - normalized * 2), 1f, 0f);
+        }
+    }
+
+    /// <summary>
+    /// Gets a color based on the value's percentage relative to the max value in the same row.
+    /// Red (0%) -> Yellow (50%) -> Green (100%)
+    /// </summary>
+    public static Color GetValueColorByRow(MapCoord coord, double value)
+    {
+        if (!RowMaxValues.TryGetValue(coord.row, out var rowMax) || rowMax <= 0)
+        {
+            return Colors.White;
+        }
+
+        var percentage = value / rowMax;  // 0.0 to 1.0
+
+        // Red (0%) -> Yellow (50%) -> Green (100%)
+        if (percentage < 0.5)
+        {
+            // Red to Yellow: increase green
+            return new Color(1f, (float)(percentage * 2), 0f);
+        }
+        else
+        {
+            // Yellow to Green: decrease red
+            return new Color((float)(2 - percentage * 2), 1f, 0f);
         }
     }
 }

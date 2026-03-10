@@ -44,6 +44,7 @@ public static class NNormalMapPointPatches
             return;
         }
 
+        var color = WeightedPaths.GetValueColorByRow(point.coord, value.Value);
         var existingBackground = instance.GetNodeOrNull<PanelContainer>(WeightBackgroundName);
 
         if (existingBackground != null)
@@ -53,12 +54,12 @@ public static class NNormalMapPointPatches
             if (existingLabel != null)
             {
                 existingLabel.Text = FormatValue(value.Value);
-                existingLabel.Modulate = WeightedPaths.GetValueColor(value.Value);
+                existingLabel.Modulate = color;
             }
             else
             {
                 // Label missing, create it
-                var newLabel = CreateInnerLabel(value.Value);
+                var newLabel = CreateInnerLabel(value.Value, color);
                 existingBackground.AddChild(newLabel);
             }
 
@@ -66,13 +67,13 @@ public static class NNormalMapPointPatches
             var style = existingBackground.GetThemeStylebox("panel") as StyleBoxFlat;
             if (style != null)
             {
-                style.BorderColor = WeightedPaths.GetValueColor(value.Value);
+                style.BorderColor = color;
             }
         }
         else
         {
             // Create new
-            var background = CreateWeightBackground(value.Value);
+            var background = CreateWeightBackground(point.coord, value.Value);
             instance.AddChild(background);
         }
     }
@@ -82,7 +83,7 @@ public static class NNormalMapPointPatches
         instance.GetNodeOrNull<PanelContainer>(WeightBackgroundName)?.QueueFree();
     }
 
-    private static Label CreateInnerLabel(double value)
+    private static Label CreateInnerLabel(double value, Color color)
     {
         var label = new Label
         {
@@ -90,7 +91,7 @@ public static class NNormalMapPointPatches
             HorizontalAlignment = HorizontalAlignment.Center,
             VerticalAlignment = VerticalAlignment.Center,
             Text = FormatValue(value),
-            Modulate = WeightedPaths.GetValueColor(value)
+            Modulate = color
         };
         label.AddThemeFontSizeOverride("font_size", 12);
         label.AddThemeColorOverride("font_color", Colors.White);
@@ -99,9 +100,10 @@ public static class NNormalMapPointPatches
         return label;
     }
 
-    private static PanelContainer CreateWeightBackground(double value)
+    private static PanelContainer CreateWeightBackground(MapCoord coord, double value)
     {
         var background = new PanelContainer { Name = WeightBackgroundName };
+        var color = WeightedPaths.GetValueColorByRow(coord, value);
 
         // Style
         var style = new StyleBoxFlat
@@ -111,7 +113,7 @@ public static class NNormalMapPointPatches
             CornerRadiusTopRight = 5,
             CornerRadiusBottomLeft = 5,
             CornerRadiusBottomRight = 5,
-            BorderColor = WeightedPaths.GetValueColor(value),
+            BorderColor = color,
             BorderWidthTop = 1,
             BorderWidthBottom = 1,
             BorderWidthLeft = 1,
@@ -123,7 +125,7 @@ public static class NNormalMapPointPatches
         };
         background.AddThemeStyleboxOverride("panel", style);
 
-        var innerLabel = CreateInnerLabel(value);
+        var innerLabel = CreateInnerLabel(value, color);
         background.AddChild(innerLabel);
 
         // Position below the map point icon

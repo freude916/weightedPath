@@ -90,15 +90,17 @@ public class MapPath : List<MapPoint>
         }
     }
 
+    // Gold estimates based on STS2 actual values:
+    // Monster: 10-20 (avg 15), Elite: 35-45 (avg 40), Treasure: 42-53 (avg 48)
     private double CalculateRoomValue(MapPointType pointType, WeightConfig config)
     {
         return pointType switch
         {
             MapPointType.Monster => config.Monster + AddGold(15),
-            MapPointType.Elite => config.Elite + AddGold(30),
+            MapPointType.Elite => config.Elite + AddGold(40),
             MapPointType.Unknown => config.Unknown,
             MapPointType.RestSite => config.RestSite,
-            MapPointType.Treasure => config.Treasure + AddGold(18),
+            MapPointType.Treasure => config.Treasure + AddGold(48),
             MapPointType.Shop => CalculateShopValue(config),
             MapPointType.Boss => 0,
             MapPointType.Ancient => 0,
@@ -156,31 +158,33 @@ public class MapPath : List<MapPoint>
         return bestValue;
     }
 
+    // Gold estimates based on STS2 actual values
     private static void AddGoldForRoom(MapPointType pointType, ref double estimatedGold)
     {
         switch (pointType)
         {
             case MapPointType.Monster:
-                estimatedGold += 15;
+                estimatedGold += 15;  // 10-20 avg
                 break;
             case MapPointType.Elite:
-                estimatedGold += 30;
+                estimatedGold += 40;  // 35-45 avg
                 break;
             case MapPointType.Treasure:
-                estimatedGold += 18;
+                estimatedGold += 48;  // 42-53 avg
                 break;
         }
     }
 
+    // Gold estimates based on STS2 actual values
     private static double CalculateRoomValueStatic(MapPointType pointType, WeightConfig config, ref double estimatedGold)
     {
         return pointType switch
         {
             MapPointType.Monster => config.Monster + AddGoldStatic(ref estimatedGold, 15),
-            MapPointType.Elite => config.Elite + AddGoldStatic(ref estimatedGold, 30),
+            MapPointType.Elite => config.Elite + AddGoldStatic(ref estimatedGold, 40),
             MapPointType.Unknown => config.Unknown,
             MapPointType.RestSite => config.RestSite,
-            MapPointType.Treasure => config.Treasure + AddGoldStatic(ref estimatedGold, 18),
+            MapPointType.Treasure => config.Treasure + AddGoldStatic(ref estimatedGold, 48),
             MapPointType.Shop => CalculateShopValueStatic(config, ref estimatedGold),
             MapPointType.Boss => 0,
             MapPointType.Ancient => 0,
