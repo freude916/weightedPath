@@ -3,5 +3,5 @@
   "name": "Weighted Paths",
   "author": "weightedPath",
   "description": "Displays weighted path values on the map to help you choose optimal routes. Higher values indicate more valuable paths based on configurable room type weights.",
-  "version": "v1.0.0"
+  "version": "v0.2.0"
 }

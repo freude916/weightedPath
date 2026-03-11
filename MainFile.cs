@@ -33,6 +33,12 @@ public partial class WeightedPaths : Node
     public static Dictionary<int, double> RowMaxValues { get; } = new();
 
     /// <summary>
+    /// Minimum value for each row (for row-based color differentiation).
+    /// Key = row number, Value = min value in that row.
+    /// </summary>
+    public static Dictionary<int, double> RowMinValues { get; } = new();
+
+    /// <summary>
     /// All possible paths from current position.
     /// </summary>
     public static List<MapPath> AllPaths { get; private set; } = new();
@@ -124,6 +130,12 @@ public partial class WeightedPaths : Node
                     {
                         RowMaxValues[row] = value;
                     }
+
+                    // Track min value per row
+                    if (!RowMinValues.TryGetValue(row, out var currentMin) || value < currentMin)
+                    {
+                        RowMinValues[row] = value;
+                    }
                 }
 
                 // Ensure we have a range
@@ -182,28 +194,42 @@ public partial class WeightedPaths : Node
     }
 
     /// <summary>
-    /// Gets a color based on the value's percentage relative to the max value in the same row.
-    /// Red (0%) -> Yellow (50%) -> Green (100%)
+    /// Gets a color using global max for overall gradient (green at top, red at bottom),
+    /// with row-based min/max for intra-row differentiation.
     /// </summary>
     public static Color GetValueColorByRow(MapCoord coord, double value)
     {
-        if (!RowMaxValues.TryGetValue(coord.row, out var rowMax) || rowMax <= 0)
+        if (MaxValue <= 0)
         {
             return Colors.White;
         }
 
-        var percentage = value / rowMax;  // 0.0 to 1.0
+        // Global ratio: forms the base gradient from bottom (red) to top (green)
+        var globalRatio = value / MaxValue;  // 0.0 to 1.0
+
+        // Row-based differentiation: add contrast within each row
+        double rowOffset = 0;
+        if (RowMaxValues.TryGetValue(coord.row, out var rowMax) &&
+            RowMinValues.TryGetValue(coord.row, out var rowMin) &&
+            rowMax > rowMin)
+        {
+            var rowRatio = (value - rowMin) / (rowMax - rowMin);  // 0.0 to 1.0
+            // Offset range: ±0.2 to add subtle differentiation within the row
+            rowOffset = (rowRatio - 0.5) * 0.4;
+        }
+
+        var finalRatio = Math.Clamp(globalRatio + rowOffset, 0.0, 1.0);
 
         // Red (0%) -> Yellow (50%) -> Green (100%)
-        if (percentage < 0.5)
+        if (finalRatio < 0.5)
         {
             // Red to Yellow: increase green
-            return new Color(1f, (float)(percentage * 2), 0f);
+            return new Color(1f, (float)(finalRatio * 2), 0f);
         }
         else
         {
             // Yellow to Green: decrease red
-            return new Color((float)(2 - percentage * 2), 1f, 0f);
+            return new Color((float)(2 - finalRatio * 2), 1f, 0f);
         }
     }
 }
